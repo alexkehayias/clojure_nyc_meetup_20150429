@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Clojure West Recap: Everything Will Flow</title>
+<meta name="author" content="(Alex Kehayias)"/>
+
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/css/reveal.css"/>
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/lib/css/zenburn.css" id="theme"/>
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/css/theme/night.css" id="theme"/>
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'http://cdn.jsdelivr.net/reveal.js/3.0.0/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<meta name="description" content="Clojure West">
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide">
+<h1>Clojure West Recap: Everything Will Flow</h1>
+<h2>Alex Kehayias</h2>
+<h2><a href="mailto:@alexkehayias">@alexkehayias</a></h2>
+<h2></h2>
+</section>
+
+<section>
+<section id="slide-nil">
+<h2 id="sec-1">Queues</h2>
+<div class="outline-text-2" id="text-1">
+</div><ul class="org-ul"><li><a id="sec-1-0-0-1" name="sec-1-0-0-1"></a>Separate the "what" from the "when"<br  /></li>
+<li><a id="sec-1-0-0-2" name="sec-1-0-0-2"></a>Address infinite demand with finite resources<br  /></li>
+<li><a id="sec-1-0-0-3" name="sec-1-0-0-3"></a>Interface between separate systems<br  /></li>
+<li><a id="sec-1-0-0-4" name="sec-1-0-0-4"></a>Closed vs Open systems<br  /></li>
+<li><a id="sec-1-0-0-5" name="sec-1-0-0-5"></a>The difference is coordination (or lack of)<br  /></li></ul>
+</section>
+</section>
+<section>
+<section id="slide-nil">
+<h2 id="sec-2">Behavior of ubounded queues</h2>
+<div class="outline-text-2" id="text-2">
+</div><ul class="org-ul"><li><a id="sec-2-0-0-1" name="sec-2-0-0-1"></a>Single consumer - latency increases exponentially<br  /></li>
+<li><a id="sec-2-0-0-2" name="sec-2-0-0-2"></a>Mulitple consumers - latency increases&#x2026; exponentially<br  /></li>
+<li><a id="sec-2-0-0-3" name="sec-2-0-0-3"></a>Only difference is the amount amount of requests before it falls over<br  /></li></ul>
+</section>
+</section>
+<section>
+<section id="slide-nil">
+<h2 id="sec-3">"Unbounded queues are fundamentally broken"</h2>
+<p>
+Puts the correctness of your system in someone else's hands
+</p>
+</section>
+</section>
+<section>
+<section id="slide-nil">
+<h2 id="sec-4">Solving the too much data problem</h2>
+<div class="outline-text-2" id="text-4">
+</div><ul class="org-ul"><li><a id="sec-4-0-0-1" name="sec-4-0-0-1"></a>Drop<br  /></li>
+<li><a id="sec-4-0-0-2" name="sec-4-0-0-2"></a>Reject<br  /></li>
+<li><a id="sec-4-0-0-3" name="sec-4-0-0-3"></a>Pause<br  /></li></ul>
+</section>
+</section>
+<section>
+<section id="slide-nil">
+<h2 id="sec-5">core.async as an example</h2>
+<div class="outline-text-2" id="text-5">
+</div><ul class="org-ul"><li><a id="sec-5-0-0-1" name="sec-5-0-0-1"></a>Channels are unbuffered by default (closed system, faster)<br  /></li>
+<li><a id="sec-5-0-0-2" name="sec-5-0-0-2"></a>Buffered channels are open systems (error if buffer is full, slower)<br  /></li>
+<li><a id="sec-5-0-0-3" name="sec-5-0-0-3"></a>Don't chain together buffered queues (more latency)<br  /><div class="org-src-container">
+
+<pre><code class="clojure">;; Unbuffered
+(let [c (chan)]
+  (go (>! c "hello"))
+  (assert (= "hello" (<!! (go (<! c)))))
+  (close! c))
+
+;; Buffered, this will throw
+(let [c (chan 1)]
+  (go (>! c "hello"))
+  (go (>! c "hello again")))
+</code></pre>
+</div>
+</li></ul>
+</section>
+</section>
+</div>
+</div>
+<p>Created by Alex Kehayias</p>
+
+<script src="http://cdn.jsdelivr.net/reveal.js/3.0.0/lib/js/head.min.js"></script>
+<script src="http://cdn.jsdelivr.net/reveal.js/3.0.0/js/reveal.js"></script>
+
+<script>
+Reveal.initialize({
+
+controls: true,
+progress: true,
+history: false,
+center: true,
+slideNumber: true,
+rollingLinks: true,
+keyboard: true,
+overview: true,
+width: 1200,
+height: 800,
+margin: 0.10,
+minScale: 0.50,
+maxScale: 2.50,
+
+theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+transition: Reveal.getQueryHash().transition || 'none', // default/cube/page/concave/zoom/linear/fade/none
+transitionSpeed: 'default',
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } }
+]
+});
+</script>
+</body>
+</html>

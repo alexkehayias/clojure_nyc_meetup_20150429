@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Clojure West Recap: Beyond Parallelism</title>
+<meta name="author" content="(Alex Kehayias)"/>
+
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/css/reveal.css"/>
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/lib/css/zenburn.css" id="theme"/>
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/reveal.js/3.0.0/css/theme/night.css" id="theme"/>
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'http://cdn.jsdelivr.net/reveal.js/3.0.0/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<meta name="description" content="Clojure West">
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide">
+<h1>Clojure West Recap: Beyond Parallelism</h1>
+<h2>Alex Kehayias</h2>
+<h2><a href="mailto:@alexkehayias">@alexkehayias</a></h2>
+<h2></h2>
+</section>
+
+<section>
+<section id="slide-nil">
+<h2 id="sec-1">Core</h2>
+<div class="outline-text-2" id="text-1">
+</div><ul class="org-ul"><li><a id="sec-1-0-0-1" name="sec-1-0-0-1"></a>future ("ubounded" global thread pool)<br  /></li>
+<li><a id="sec-1-0-0-2" name="sec-1-0-0-2"></a>pmap (wraps futures, lazy)<br  /></li>
+<li><a id="sec-1-0-0-3" name="sec-1-0-0-3"></a>agents (fixed thread pool)<br  /></li></ul>
+</section>
+</section>
+<section>
+<section id="slide-nil">
+<h2 id="sec-2">Lazyness, a blessing and a curse</h2>
+<div class="outline-text-2" id="text-2">
+</div><ul class="org-ul"><li><a id="sec-2-0-0-1" name="sec-2-0-0-1"></a>Example:<br  /><div class="org-src-container">
+
+<pre><code class="clojure">;; Unevaluated
+(pmap inc (range 99))
+
+;; Force evaluation
+(doall (pmap inc (range 99)))
+</code></pre>
+</div>
+</li>
+<li><a id="sec-2-0-0-2" name="sec-2-0-0-2"></a>Combining many lazy pmaps is slow<br  /></li>
+<li><a id="sec-2-0-0-3" name="sec-2-0-0-3"></a>Often programs are eager<br  /></li></ul>
+</section>
+</section>
+<section>
+<section id="slide-nil">
+<h2 id="sec-3">Claypoole</h2>
+<div class="outline-text-2" id="text-3">
+</div><ul class="org-ul"><li><a id="sec-3-0-0-1" name="sec-3-0-0-1"></a>Eager by default<br  /></li>
+<li><a id="sec-3-0-0-2" name="sec-3-0-0-2"></a>Results are unordered, first one back is first to be realized<br  /></li>
+<li><a id="sec-3-0-0-3" name="sec-3-0-0-3"></a>Configurable threadpool that is first class<br  /></li>
+<li><a id="sec-3-0-0-4" name="sec-3-0-0-4"></a>Priority<br  /></li>
+<li><a id="sec-3-0-0-5" name="sec-3-0-0-5"></a>Use where you would use pmap<br  /></li></ul>
+</section>
+</section>
+<section>
+<section id="slide-nil">
+<h2 id="sec-4">Example</h2>
+<div class="org-src-container">
+
+<pre><code class="clojure">(require '[com.climate.claypoole :as cp])
+;; A threadpool with 2 threads.
+(def pool (cp/threadpool 2))
+;; Future
+(def fut (cp/future pool (myfn myinput)))
+;; Ordered pmap
+(def intermediates (cp/pmap pool myfn1 myinput-a myinput-b))
+;; We can feed the streaming sequence right into another parallel function.
+(def output (cp/pmap pool myfn2 intermediates))
+;; We can read the output from the stream as it is available.
+(doseq [o output] (prn o))
+;; NOTE: The JVM doesn't automatically clean up threads for us.
+(cp/shutdown pool)
+</code></pre>
+</div>
+</section>
+</section>
+</div>
+</div>
+<p>Created by Alex Kehayias</p>
+
+<script src="http://cdn.jsdelivr.net/reveal.js/3.0.0/lib/js/head.min.js"></script>
+<script src="http://cdn.jsdelivr.net/reveal.js/3.0.0/js/reveal.js"></script>
+
+<script>
+Reveal.initialize({
+
+controls: true,
+progress: true,
+history: false,
+center: true,
+slideNumber: true,
+rollingLinks: true,
+keyboard: true,
+overview: true,
+width: 1200,
+height: 800,
+margin: 0.10,
+minScale: 0.50,
+maxScale: 2.50,
+
+theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+transition: Reveal.getQueryHash().transition || 'none', // default/cube/page/concave/zoom/linear/fade/none
+transitionSpeed: 'default',
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'http://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } }
+]
+});
+</script>
+</body>
+</html>
